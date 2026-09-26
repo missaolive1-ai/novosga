@@ -23,23 +23,8 @@ final class Version20260925120000 extends AbstractMigration
         return 'Adds the missing foreign key on atendimentos/historico_atendimentos.local_id';
     }
 
-    public function isTransactional(): bool
-    {
-        // ALTER TABLE causes an implicit commit on MySQL.
-        return false;
-    }
-
     public function up(Schema $schema): void
     {
-        // local_id existe nas duas tabelas desde a Version2, mas nunca
-        // ganhou uma FK de verdade -- so' a coluna solta. Isso deixava
-        // excluir um Local em uso silenciosamente sem bloquear nada (o
-        // Listener que fazia essa checagem em codigo tinha bug e consultava
-        // a entidade errada, ver EventListener/LocalListener removido).
-        //
-        // Limpa referencias orfas antes de criar a constraint (dados
-        // antigos podem ter local_id apontando pra um Local ja excluido
-        // manualmente antes dessa correcao existir).
         $this->addSql(
             'UPDATE atendimentos SET local_id = NULL
              WHERE local_id IS NOT NULL AND local_id NOT IN (SELECT id FROM locais)'
